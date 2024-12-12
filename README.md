@@ -1,28 +1,27 @@
-#Firebase Autenticação
+# Firebase Autenticação
 
-Este projeto implementa autenticação usando Firebase Authentication. Inclui login, cadastro, recuperação de senha e login via Google.
+Este projeto implementa autenticação de usuários utilizando **Firebase Authentication**. Ele inclui funcionalidades como login com email e senha, cadastro de novos usuários, recuperação de senha e login via Google. O sistema também utiliza o **Firebase Firestore** para armazenar informações adicionais dos usuários, como nome e email.
 
-#Funcionalidades
+## Funcionalidades
 
-Login com Email e SenhaPermite que usuários existentes realizem login com email e senha.
+- **Login com Email e Senha**: Permite que usuários existentes façam login com email e senha.
+- **Cadastro de Novos Usuários**: Permite que novos usuários se cadastrem usando email e senha, salvando informações adicionais no Firestore.
+- **Recuperação de Senha**: Permite que usuários recuperem a senha enviando um email de redefinição para o email cadastrado.
+- **Login com Google**: Permite que usuários façam login utilizando suas contas do Google.
 
-Cadastro de Novos UsuáriosRealiza a criação de contas com email e senha, e salva informações adicionais no Firestore.
+## Tecnologias Utilizadas
 
-Recuperação de SenhaVerifica se o email está cadastrado e envia um email de redefinição de senha.
+- **HTML/CSS/JavaScript**: Interface do usuário.
+- **Firebase Authentication**: Para autenticação de usuários (email/senha e login com Google).
+- **Firebase Firestore**: Para armazenamento de dados dos usuários.
+- **SweetAlert2**: Para exibição de mensagens de feedback.
 
-Login com GooglePermite que usuários façam login usando suas contas do Google.
+## Instalação
 
-Mensagens de FeedbackExibe mensagens claras para o usuário em caso de sucesso ou erro, utilizando SweetAlert.
+### 1. Clonar o Repositório
 
-#Tecnologias Utilizadas
+Clone este repositório para o seu ambiente local:
 
-HTML/CSS/JavaScript: Interface do usuário.
-
-Firebase Authentication: Para autenticação de usuários.
-
-Firebase Firestore: Para armazenamento de dados dos usuários.
-
-SweetAlert: Para exibição de mensagens de feedback.
-
-#Configuração do Projeto
-
+```bash
+git clone https://github.com/seu-usuario/firebase-authentication.git
+cd firebase-authentication
