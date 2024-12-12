@@ -25,3 +25,8 @@ Clone este repositório para o seu ambiente local:
 ```bash
 git clone https://github.com/seu-usuario/firebase-authentication.git
 cd firebase-authentication
+```
+
+### 2. Teste com o Vercel
+``` bash
+link https://login-firebase-rosy.vercel.app
