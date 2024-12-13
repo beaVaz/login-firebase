@@ -8,6 +8,10 @@ Este projeto implementa autenticação de usuários utilizando **Firebase Authen
 - **Cadastro de Novos Usuários**: Permite que novos usuários se cadastrem usando email e senha, salvando informações adicionais no Firestore.
 - **Recuperação de Senha**: Permite que usuários recuperem a senha enviando um email de redefinição para o email cadastrado.
 - **Login com Google**: Permite que usuários façam login utilizando suas contas do Google.
+  
+(![Captura de tela 2024-12-12 233933](https://github.com/user-attachments/assets/6fee003d-4e2f-437d-8486-127d7e4473f6))
+(![Captura de tela 2024-12-12 234456](https://github.com/user-attachments/assets/bddadbd7-221a-42c7-b1d0-19541d8b141a)
+)
 
 ## Tecnologias Utilizadas
 
