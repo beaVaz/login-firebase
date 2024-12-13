@@ -1,177 +1,192 @@
-// Importação dos módulos do Firebase
+// Importa as funções necessárias do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore, setDoc, doc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyBJ66e6JLuYm1ZWWerP94OdyBe5CFpMzkQ",
-    authDomain: "loginpw2-aae26.firebaseapp.com",
-    projectId: "loginpw2-aae26",
-    storageBucket: "loginpw2-aae26.firebasestorage.app",
-    messagingSenderId: "376191388905",
-    appId: "1:376191388905:web:7b560a4d4c1dbbeea7b478"
+// Configurações do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBJ66e6JLuYm1ZWWerP94OdyBe5CFpMzkQ",
+        authDomain: "loginpw2-aae26.firebaseapp.com",
+        projectId: "loginpw2-aae26",
+        storageBucket: "loginpw2-aae26.firebasestorage.app",
+        messagingSenderId: "376191388905",
+        appId: "1:376191388905:web:7b560a4d4c1dbbeea7b478"
 };
 
-// Inicialização do Firebase
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
+const db = getFirestore();
 const provider = new GoogleAuthProvider();
 
-// Login com Google
-const googleLogin = document.getElementById("google001");
-googleLogin.addEventListener("click", function () {
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      const user = result.user;
-      console.log(user);
-      // Redireciona para homepage
-      window.location.href = "../homepage.html"; 
-    })
-    .catch((error) => {
-      console.error("Erro ao realizar login com Google:", error);
-    });
-});
+// Função genérica para exibir mensagens temporárias
+function showMessage(title, text, icon) {
+  Swal.fire({
+    title: title,
+    text: text,
+    icon: icon,
+  });
+}
 
-// Função para validar o formato de email
+// Função para validar formato de e-mail
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return regex.test(email);
 }
 
+// Autenticação com Google
+document.getElementById("google001").addEventListener("click", () => {
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      console.log(result.user);
+      window.location.href = "../homepage.html";
+    })
+    .catch((error) => {
+      console.error("Erro ao autenticar com Google:", error.message);
+      showMessage("Erro", "Não foi possível fazer login com o Google.", "error");
+    });
+});
+
 // Recuperação de senha
-const recuperar = document.getElementById("reset");
-recuperar.addEventListener("click", async function (event) {
+document.getElementById("reset").addEventListener("click", (event) => {
   event.preventDefault();
+  const email = prompt("Insira o email cadastrado para a recuperação da senha:");
 
-  let email = prompt("Insira o email cadastrado para a recuperação da senha:");
-
-  if (email == null || email == "") {
-    Swal.fire({
-      title: "Campo vazio!",
-      text: "Por favor, insira um email.",
-      icon: "error",
-    });
+  if (!email || email.trim() === "") {
+    showMessage("Erro", "Campo de e-mail vazio. Por favor, insira um e-mail.", "error");
   } else if (!isValidEmail(email)) {
-    Swal.fire({
-      title: "Formato errado!",
-      text: "O valor inserido não está no formato de email.",
-      icon: "error",
-    });
+    showMessage("Erro", "Os caracteres inserido não está no formato de e-mail.", "error");
   } else {
-    const db = getFirestore();
-    const userRef = collection(db, "users");
-    const querySnapshot = await getDocs(userRef);
-
-    let emailFound = false;
-
-    querySnapshot.forEach((doc) => {
-      if (doc.data().email === email) {
-        emailFound = true;
-      }
-    });
-
-    if (!emailFound) {
-      Swal.fire({
-        title: "Email não encontrado!",
-        text: "Este email não está cadastrado no sistema.",
-        icon: "error",
-      });
-      return;
-    }
-
     sendPasswordResetEmail(auth, email)
       .then(() => {
-        Swal.fire({
-          title: "Email enviado!",
-          text: "Um email de recuperação foi enviado para sua caixa de entrada.",
-          icon: "success",
-        });
+        showMessage(
+          "Sucesso",
+          "Se o e-mail estiver cadastrado, um link de redefinição foi enviado.",
+          "success"
+        );
       })
       .catch((error) => {
-        Swal.fire({
-          title: "Erro ao enviar email!",
-          text: "Tente novamente mais tarde.",
-          icon: "error",
-        });
+        if (error.code === "auth/user-not-found") {
+          showMessage("Erro", "E-mail não encontrado no sistema.", "error");
+        } else {
+          showMessage("Erro", `Erro ao enviar o e-mail: ${error.message}`, "error");
+        }
       });
   }
 });
 
-// Mensagens temporárias na interface
-function showMessage(message, divId) {
-  var messageDiv = document.getElementById(divId);
-  messageDiv.style.display = "block";
-  messageDiv.innerHTML = message;
-  messageDiv.style.opacity = 1;
-  setTimeout(function () {
-    messageDiv.style.opacity = 0;
-  }, 5000);
-}
-
-// Cadastro de novos usuários
-const signUp = document.getElementById('submitSignUp');
-signUp.addEventListener('click', (event) => {
+// Cadastro de novo usuário
+document.getElementById("submitSignUp").addEventListener("click", (event) => {
   event.preventDefault();
 
-  const email = document.getElementById('rEmail').value;
-  const password = document.getElementById('rPassword').value;
-  const firstName = document.getElementById('fName').value;
-  const lastName = document.getElementById('lName').value;
+  const email = document.getElementById("rEmail").value;
+  const password = document.getElementById("rPassword").value;
+  const firstName = document.getElementById("fName").value;
+  const lastName = document.getElementById("lName").value;
+
+  if (!isValidEmail(email)) {
+    showMessage("Erro", "Formato de e-mail inválido.", "error");
+    return;
+  }
 
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
-      const userData = { email, firstName, lastName };
-
-      showMessage('Conta criada com sucesso', 'signUpMessage');
-
-      const db = getFirestore();
-      const docRef = doc(db, "users", user.uid);
-      setDoc(docRef, userData)
-        .then(() => {
-          // Redireciona para a página inicial após criar a conta
-          window.location.href = 'index.html'; // Verifique o caminho correto
-        })
-        .catch((error) => {
-          console.error("Erro ao salvar dados do usuário no Firestore:", error);
-        });
+      return setDoc(doc(db, "users", user.uid), { email, firstName, lastName });
+    })
+    .then(() => {
+      showMessage("Sucesso", "Conta criada com sucesso!", "success");
+      window.location.href = "index.html";
     })
     .catch((error) => {
-      const errorCode = error.code;
-      if (errorCode === 'auth/email-already-in-use') {
-        showMessage('Endereço de email já existe', 'signUpMessage');
+      if (error.code === "auth/email-already-in-use") {
+        showMessage("Erro", "Este e-mail já está em uso.", "error");
       } else {
-        showMessage('Não foi possível criar usuário', 'signUpMessage');
+        showMessage("Erro", "Erro ao criar conta: " + error.message, "error");
       }
     });
 });
 
-// Login de usuários existentes
-const signIn = document.getElementById('submitSignIn');
-signIn.addEventListener('click', (event) => {
+// Login de usuário existente
+document.getElementById("submitSignIn").addEventListener("click", (event) => {
   event.preventDefault();
 
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
-      showMessage('Usuário logado com sucesso', 'signInMessage');
       const user = userCredential.user;
-
-      // Salva o ID do usuário logado no localStorage
-      localStorage.setItem('loggedInUserId', user.uid);
-
-      // Redireciona para a homepage
-      window.location.href = '../homepage.html'; 
+      localStorage.setItem("loggedInUserId", user.uid);
+      showMessage("Sucesso", "Login realizado com sucesso!", "success");
+      window.location.href = "homepage.html";
     })
     .catch((error) => {
-      const errorCode = error.code;
-      if (errorCode === 'auth/invalid-credential' || errorCode === 'auth/user-not-found') {
-        showMessage('Email ou senha incorretos', 'signInMessage');
+      if (error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+        showMessage("Erro", "E-mail ou senha incorretos.", "error");
       } else {
-        showMessage('Erro ao efetuar login. Verifique o email', 'signInMessage');
+        showMessage("Erro", "Erro ao fazer login: " + error.message, "error");
       }
     });
 });
+
+document.getElementById("reset").addEventListener("click", (event) => {
+  event.preventDefault();
+  
+  const email = prompt("Insira o email cadastrado para a recuperação da senha:");
+
+  if (!email || email.trim() === "") {
+    Swal.fire({
+      title: "Campo vazio!",
+      text: "Por favor, insira um e-mail válido.",
+      icon: "error",
+    });
+    return;
+  }
+
+  if (!isValidEmail(email)) {
+    Swal.fire({
+      title: "Formato inválido!",
+      text: "O valor inserido não está no formato de e-mail.",
+      icon: "error",
+    });
+    return;
+  }
+
+  // Verifica se o e-mail está cadastrado
+  fetchSignInMethodsForEmail(auth, email)
+    .then((signInMethods) => {
+      if (signInMethods.length === 0) {
+        Swal.fire({
+          title: "E-mail não encontrado!",
+          text: "Este e-mail não está cadastrado no sistema.",
+          icon: "error",
+        });
+        return;
+      }
+
+      // Envia o e-mail de redefinição de senha
+      return sendPasswordResetEmail(auth, email);
+    })
+    .then(() => {
+      Swal.fire({
+        title: "E-mail enviado!",
+        text: "Se o e-mail estiver correto, um link de redefinição foi enviado para sua caixa de entrada.",
+        icon: "success",
+      });
+    })
+    .catch((error) => {
+      console.error("Erro ao verificar ou enviar o e-mail:", error);
+      Swal.fire({
+        title: "Erro!",
+        text: "Ocorreu um problema ao tentar enviar o e-mail. Tente novamente.",
+        icon: "error",
+      });
+    });
+});
+
+// Função para validar e-mails
+function isValidEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
