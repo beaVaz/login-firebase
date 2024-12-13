@@ -1,192 +1,184 @@
-// Importa as funções necessárias do Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-// Configurações do Firebase
+
 const firebaseConfig = {
   apiKey: "AIzaSyBJ66e6JLuYm1ZWWerP94OdyBe5CFpMzkQ",
-        authDomain: "loginpw2-aae26.firebaseapp.com",
-        projectId: "loginpw2-aae26",
-        storageBucket: "loginpw2-aae26.firebasestorage.app",
-        messagingSenderId: "376191388905",
-        appId: "1:376191388905:web:7b560a4d4c1dbbeea7b478"
+  authDomain: "loginpw2-aae26.firebaseapp.com",
+  projectId: "loginpw2-aae26",
+  storageBucket: "loginpw2-aae26.firebasestorage.app",
+  messagingSenderId: "376191388905",
+  appId: "1:376191388905:web:7b560a4d4c1dbbeea7b478"
 };
 
-// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth();
-const db = getFirestore();
 const provider = new GoogleAuthProvider();
 
-// Função genérica para exibir mensagens temporárias
-function showMessage(title, text, icon) {
-  Swal.fire({
-    title: title,
-    text: text,
-    icon: icon,
-  });
-}
+//conta do google
+const googleLogin = document.getElementById("google001")
 
-// Função para validar formato de e-mail
-function isValidEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
-// Autenticação com Google
-document.getElementById("google001").addEventListener("click", () => {
+googleLogin.addEventListener("click", function () {
   signInWithPopup(auth, provider)
     .then((result) => {
-      console.log(result.user);
+
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const user = result.user;
+      console.log(user);
       window.location.href = "../homepage.html";
-    })
-    .catch((error) => {
-      console.error("Erro ao autenticar com Google:", error.message);
-      showMessage("Erro", "Não foi possível fazer login com o Google.", "error");
+
+    }).catch((error) => {
+      const errorCode = error.code;
+      const errorMessage = error.message;
     });
-});
+})
 
-// Recuperação de senha
-document.getElementById("reset").addEventListener("click", (event) => {
-  event.preventDefault();
-  const email = prompt("Insira o email cadastrado para a recuperação da senha:");
-
-  if (!email || email.trim() === "") {
-    showMessage("Erro", "Campo de e-mail vazio. Por favor, insira um e-mail.", "error");
+//função para recuperar senha 
+const recuperar = document.getElementById("reset");
+recuperar.addEventListener("click", function (event) {
+  event.preventDefault()
+  function isValidEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+  // prompt para inserir o email
+  let email = prompt("Insira o email cadastrado para a recuperação da senha:");
+  // campo esta vazio
+  if (email == null || email == "") {
+    Swal.fire({
+      title: "Campo vazio!",
+      text: "campo de email vazio, por favor insira um email",
+      icon: "error"
+    });
+    // formato de email
   } else if (!isValidEmail(email)) {
-    showMessage("Erro", "Os caracteres inserido não está no formato de e-mail.", "error");
+    Swal.fire({
+      title: "Formato errado!",
+      text: "O valor inserido não está no formato de email.",
+      icon: "error"
+    });
   } else {
     sendPasswordResetEmail(auth, email)
       .then(() => {
-        showMessage(
-          "Sucesso",
-          "Se o e-mail estiver cadastrado, um link de redefinição foi enviado.",
-          "success"
-        );
+        Swal.fire({
+          title: "Email enviado!",
+          text: "Caso o email esteja cadastrado um email de recuperação foi enviado para sua caixa de email",
+          icon: "success"
+        });
+
       })
       .catch((error) => {
-        if (error.code === "auth/user-not-found") {
-          showMessage("Erro", "E-mail não encontrado no sistema.", "error");
-        } else {
-          showMessage("Erro", `Erro ao enviar o e-mail: ${error.message}`, "error");
-        }
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        Swal.fire({
+          title: "Email não enviado!",
+          text: "Não foi possível encontar nenhum email cadastrado no sitema",
+          icon: "error"
+        });
       });
   }
-});
+})
 
-// Cadastro de novo usuário
-document.getElementById("submitSignUp").addEventListener("click", (event) => {
-  event.preventDefault();
 
-  const email = document.getElementById("rEmail").value;
-  const password = document.getElementById("rPassword").value;
-  const firstName = document.getElementById("fName").value;
-  const lastName = document.getElementById("lName").value;
+//mensagens temporárias na interface
+function showMessage(message, divId) {
+  var messageDiv = document.getElementById(divId);
+  messageDiv.style.display = "block";
+  messageDiv.innerHTML = message;
+  messageDiv.style.opacity = 1;
+  setTimeout(function () {
+    messageDiv.style.opacity = 0;
+  }, 5000); 
+}
 
-  if (!isValidEmail(email)) {
-    showMessage("Erro", "Formato de e-mail inválido.", "error");
-    return;
-  }
+//  cadastro de novos usuários
+const signUp = document.getElementById('submitSignUp');
+signUp.addEventListener('click', (event) => {
+  event.preventDefault(); 
 
+  // dados do formulário de cadastro
+  const email = document.getElementById('rEmail').value;
+  const password = document.getElementById('rPassword').value;
+  const firstName = document.getElementById('fName').value;
+  const lastName = document.getElementById('lName').value;
+
+  const auth = getAuth(); // Configura o serviço de autenticação
+  const db = getFirestore(); // Conecta ao Firestore
+
+  // Cria uma conta com e-mail e senha
   createUserWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
-      const user = userCredential.user;
-      return setDoc(doc(db, "users", user.uid), { email, firstName, lastName });
-    })
-    .then(() => {
-      showMessage("Sucesso", "Conta criada com sucesso!", "success");
-      window.location.href = "index.html";
+      const user = userCredential.user; // Usuário autenticado
+      const userData = { email, firstName, lastName }; // Dados do usuário para salvar
+
+      showMessage('Conta criada com sucesso', 'signUpMessage'); // Exibe mensagem de sucesso
+
+      // Salva os dados do usuário no Firestore
+      const docRef = doc(db, "users", user.uid);
+      setDoc(docRef, userData)
+        .then(() => {
+          window.location.href = 'index.html'; 
+        })
+        .catch((error) => {
+          console.error("Error writing document", error);
+        });
     })
     .catch((error) => {
-      if (error.code === "auth/email-already-in-use") {
-        showMessage("Erro", "Este e-mail já está em uso.", "error");
+      const errorCode = error.code;
+      if (errorCode == 'auth/email-already-in-use') {
+        showMessage('Endereço de email já existe', 'signUpMessage');
       } else {
-        showMessage("Erro", "Erro ao criar conta: " + error.message, "error");
+        showMessage('Não é possível criar usuário', 'signUpMessage');
       }
     });
 });
 
-// Login de usuário existente
-document.getElementById("submitSignIn").addEventListener("click", (event) => {
-  event.preventDefault();
+// Lógica de login de usuários existentes
+const signIn = document.getElementById('submitSignIn');
+signIn.addEventListener('click', (event) => {
+  event.preventDefault(); // Previne o comportamento padrão do botão
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  // Captura os dados do formulário de login
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const auth = getAuth(); // Configura o serviço de autenticação
 
+  // Realiza o login com e-mail e senha
   signInWithEmailAndPassword(auth, email, password)
     .then((userCredential) => {
+      showMessage('usuário logado com sucesso', 'signInMessage'); // Exibe mensagem de sucesso
       const user = userCredential.user;
-      localStorage.setItem("loggedInUserId", user.uid);
-      showMessage("Sucesso", "Login realizado com sucesso!", "success");
-      window.location.href = "homepage.html";
+
+      // Salva o ID do usuário no localStorage
+      localStorage.setItem('loggedInUserId', user.uid);
+
+      window.location.href = 'homepage.html'; // Redireciona para a página inicial
     })
     .catch((error) => {
-      if (error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
-        showMessage("Erro", "E-mail ou senha incorretos.", "error");
-      } else {
-        showMessage("Erro", "Erro ao fazer login: " + error.message, "error");
+      const errorCode = error.code;
+      if (errorCode === 'auth/invalid-credential') {
+        showMessage('Email ou Senha incorreta', 'signInMessage');
       }
     });
 });
 
-document.getElementById("reset").addEventListener("click", (event) => {
-  event.preventDefault();
-  
-  const email = prompt("Insira o email cadastrado para a recuperação da senha:");
+const recoverPasswordLink = document.getElementById('recover-password-link');
 
-  if (!email || email.trim() === "") {
-    Swal.fire({
-      title: "Campo vazio!",
-      text: "Por favor, insira um e-mail válido.",
-      icon: "error",
-    });
-    return;
-  }
+recoverPasswordLink.addEventListener('click', (event) => {
+  event.preventDefault(); 
 
-  if (!isValidEmail(email)) {
-    Swal.fire({
-      title: "Formato inválido!",
-      text: "O valor inserido não está no formato de e-mail.",
-      icon: "error",
-    });
-    return;
-  }
+  // Obtenha o endereço de email do usuário
+  const email = prompt("Digite seu endereço de email:");
 
-  // Verifica se o e-mail está cadastrado
-  fetchSignInMethodsForEmail(auth, email)
-    .then((signInMethods) => {
-      if (signInMethods.length === 0) {
-        Swal.fire({
-          title: "E-mail não encontrado!",
-          text: "Este e-mail não está cadastrado no sistema.",
-          icon: "error",
-        });
-        return;
-      }
-
-      // Envia o e-mail de redefinição de senha
-      return sendPasswordResetEmail(auth, email);
-    })
+  // Envie a solicitação de redefinição de senha para o Firebase
+  firebase.auth().sendPasswordResetEmail(email)
     .then(() => {
-      Swal.fire({
-        title: "E-mail enviado!",
-        text: "Se o e-mail estiver correto, um link de redefinição foi enviado para sua caixa de entrada.",
-        icon: "success",
-      });
+      // Exibir uma mensagem de sucesso
+      alert("Um email foi enviado para redefinir sua senha.");
     })
     .catch((error) => {
-      console.error("Erro ao verificar ou enviar o e-mail:", error);
-      Swal.fire({
-        title: "Erro!",
-        text: "Ocorreu um problema ao tentar enviar o e-mail. Tente novamente.",
-        icon: "error",
-      });
+      // Exibir uma mensagem de erro
+      alert(error.message);
     });
 });
-
-// Função para validar e-mails
-function isValidEmail(email) {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
